@@ -1,0 +1,502 @@
+import 'package:flutter/material.dart';
+
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final List<Student> students = [
+    Student(
+        name: 'Subhashini', idNumber: '192011334', department: 'CSE', year: 4),
+    Student(
+        name: 'Mahalakshmi', idNumber: '192011442', department: 'IT', year: 4),
+    Student(name: 'Hashh', idNumber: '192011097', department: 'CSE', year: 4),
+    Student(name: 'Varsha', idNumber: '192011000', department: 'ECE', year: 3),
+    Student(name: 'Deepak', idNumber: '192011144', department: 'CSE', year: 1),
+    Student(name: 'Nisha', idNumber: '192011154', department: 'CSE', year: 4),
+    // Add more students as needed
+  ];
+  TextEditingController nameController = TextEditingController();
+  TextEditingController departmentController = TextEditingController();
+  TextEditingController idNumberController = TextEditingController();
+  TextEditingController yearController = TextEditingController();
+  // Student _newStudent;
+
+  List<Student> displayedStudents = [];
+
+  TextEditingController searchController = TextEditingController();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
+  void initState() {
+    super.initState();
+    displayedStudents.addAll(students);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      key: _scaffoldKey,
+      appBar: AppBar(
+        title: const Text(
+          'Student Details',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: const Color(0xFFDBECF4),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () {
+              // Open the drawer when the menu icon is pressed
+              _scaffoldKey.currentState?.openDrawer();
+            },
+          ),
+          const Spacer(), // This will push the filter icon to the right
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: () {
+              // Handle filter icon press
+            },
+          ),
+        ],
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.indigo, Colors.black],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        // color: Colors.cyan[600],
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                controller: searchController,
+                onChanged: (query) {
+                  // _showAddStudentDialog(context);
+                  // Update the displayed students based on the search query
+                  setState(() {
+                    // students.add(newStudent);
+                    displayedStudents = students
+                        .where((student) =>
+                            student.name
+                                .toLowerCase()
+                                .contains(query.toLowerCase()) ||
+                            student.year.toString().contains(query) ||
+                            student.department
+                                .toLowerCase()
+                                .contains(query.toLowerCase()))
+                        .toList();
+                  });
+                },
+                decoration: InputDecoration(
+                  hintText: 'Search your need !',
+                  filled: true, // Set to true to enable background color
+                  fillColor: const Color.fromARGB(255, 238, 233, 233),
+                  prefixIcon: const Icon(
+                    (Icons.search),
+                    // color: Colors.white,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30.0),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: students.length,
+                itemBuilder: (context, index) {
+                  return buildStudentCard(students[index]);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showAddStudentDialog(context);
+        },
+        child: const Icon(Icons.person_add),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(
+                color: Color(0xFF194569),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'MENU BAR',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontFamily: 'NanumGothic',
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.lock),
+              title: const Text('Change Password'),
+              onTap: () {
+                _showChangePasswordDialog(context);
+                Navigator.pop(context); // Close the drawer
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildStudentCard(Student student) {
+    return GestureDetector(
+      onTap: () {
+        _showEditStudentDialog(context, student);
+      },
+      child: Container(
+        child: Card(
+          margin: const EdgeInsets.all(8),
+          color: Colors.white,
+          child: ListTile(
+            title: RichText(
+              text: TextSpan(
+                text: '${student.name}\n',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+                children: [
+                  TextSpan(
+                    text: '${student.department}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.normal,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            subtitle: Text(
+              '${student.idNumber} - Year ${student.year}',
+              style: const TextStyle(
+                fontSize: 16,
+                fontFamily: 'Poppins',
+              ),
+            ),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () {
+                setState(() {
+                  students.remove(student);
+                });
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showEditStudentDialog(BuildContext context, Student student) {
+    TextEditingController nameController =
+        TextEditingController(text: student.name);
+    TextEditingController departmentController =
+        TextEditingController(text: student.department);
+    TextEditingController idNumberController =
+        TextEditingController(text: student.idNumber);
+    TextEditingController yearController =
+        TextEditingController(text: student.year.toString());
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Edit Student'),
+          content: Column(
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Name: '),
+              ),
+              TextField(
+                controller: departmentController,
+                decoration: const InputDecoration(labelText: 'Department: '),
+              ),
+              TextField(
+                controller: idNumberController,
+                decoration: const InputDecoration(labelText: 'ID Number: '),
+              ),
+              TextField(
+                controller: yearController,
+                decoration: const InputDecoration(labelText: 'Year: '),
+              ),
+            ],
+          ),
+          actions: [
+            OutlinedButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+              },
+              child: const Text('Cancel'),
+            ),
+            OutlinedButton(
+              onPressed: () {
+                // Validate input and update student details
+                if (nameController.text.isNotEmpty &&
+                    departmentController.text.isNotEmpty &&
+                    idNumberController.text.isNotEmpty &&
+                    yearController.text.isNotEmpty) {
+                  setState(() {
+                    // Update the student details
+                    student.name = nameController.text;
+                    student.department = departmentController.text;
+                    student.idNumber = idNumberController.text;
+                    student.year = int.parse(yearController.text);
+                  });
+                  Navigator.pop(context); // Close the dialog
+                }
+              },
+              child: Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showChangePasswordDialog(BuildContext context) {
+    TextEditingController currentPasswordController = TextEditingController();
+    TextEditingController newPasswordController = TextEditingController();
+    TextEditingController confirmPasswordController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Change Password'),
+          content: Column(
+            children: [
+              TextField(
+                controller: currentPasswordController,
+                decoration: InputDecoration(labelText: 'Current Password'),
+                obscureText: true,
+              ),
+              TextField(
+                controller: newPasswordController,
+                decoration: InputDecoration(labelText: 'New Password'),
+                obscureText: true,
+              ),
+              TextField(
+                controller: confirmPasswordController,
+                decoration: InputDecoration(labelText: 'Confirm Password'),
+                obscureText: true,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                // Validate input
+                if (currentPasswordController.text.isNotEmpty &&
+                    newPasswordController.text.isNotEmpty &&
+                    confirmPasswordController.text.isNotEmpty &&
+                    newPasswordController.text ==
+                        confirmPasswordController.text) {
+                  // TODO: Add logic to change the password
+                  // For now, print a message to the console
+                  print('Password changed successfully');
+                  Navigator.pop(context); // Close the dialog
+                } else {
+                  // Display an error message or handle invalid input
+                  print('Invalid input. Please check your passwords.');
+                }
+              },
+              child: const Text('Change'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget buildStudentCards(Student student) {
+    return Card(
+      margin: const EdgeInsets.all(8),
+      child: ListTile(
+        title: RichText(
+          text: TextSpan(
+            text: '${student.name}\n',
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+            children: [
+              TextSpan(
+                text: '${student.department}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.normal,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+        ),
+        subtitle: Text('${student.idNumber} - Year ${student.year}'),
+        trailing: IconButton(
+          icon: const Icon(Icons.delete),
+          onPressed: () {
+            setState(() {
+              students.remove(student);
+              // displayedStudents.remove(student);
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  void _showAddStudentDialog(BuildContext context) {
+    TextEditingController nameController = TextEditingController();
+    TextEditingController departmentController = TextEditingController();
+    TextEditingController idNumberController = TextEditingController();
+    TextEditingController yearController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // searchFocusNode.unfocus();
+        return AlertDialog(
+          title: const Text(
+            'Add Student:',
+            style: TextStyle(
+              fontFamily: 'Poppins', // Set the font to Poppins
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Column(
+            children: [
+              // Container(
+              //   width: 300, // Set your desired width
+              //   height: 200,
+              //   // ),
+              //   child: Column(
+              //     children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Name:'),
+              ),
+              TextField(
+                controller: departmentController,
+                decoration: const InputDecoration(labelText: 'Department:'),
+              ),
+              TextField(
+                controller: idNumberController,
+                decoration: const InputDecoration(labelText: 'ID Number:'),
+              ),
+              TextField(
+                controller: yearController,
+                decoration: const InputDecoration(labelText: 'Year:'),
+              ),
+            ],
+          ),
+          actions: [
+            OutlinedButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+              },
+              child: const Text('Cancel'),
+            ),
+            const SizedBox(width: 8),
+            OutlinedButton(
+              onPressed: () {
+                print("Add button pressed");
+                print("Name: ${nameController.text}");
+                print("Department: ${departmentController.text}");
+                print("ID Number: ${idNumberController.text}");
+                print("Year: ${yearController.text}");
+
+                // Validate input and add new student
+                if (nameController.text.isNotEmpty &&
+                    departmentController.text.isNotEmpty &&
+                    idNumberController.text.isNotEmpty &&
+                    yearController.text.isNotEmpty) {
+                  setState(() {
+                    Student newStudent = Student(
+                      name: nameController.text,
+                      department: departmentController.text,
+                      idNumber: idNumberController.text,
+                      year: int.parse(yearController.text),
+                    );
+                    students.add(newStudent);
+                    displayedStudents.add(newStudent);
+                  });
+                  Navigator.pop(context); // Close the dialog
+                }
+              },
+              style: OutlinedButton.styleFrom(
+                elevation: 6, // Adjust the elevation as needed
+              ),
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class Student {
+  String name;
+  String department;
+  String idNumber;
+  int year;
+
+  Student({
+    required this.name,
+    required this.department,
+    required this.idNumber,
+    required this.year,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Student &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          department == other.department &&
+          idNumber == other.idNumber &&
+          year == other.year;
+
+  @override
+  int get hashCode =>
+      name.hashCode ^ department.hashCode ^ idNumber.hashCode ^ year.hashCode;
+}
